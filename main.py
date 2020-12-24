@@ -49,15 +49,70 @@ def gethead():
 
 def gethtml(url):
     head = gethead()
-    response = requests.get(url=url, headers=head)
-    html = response.text
-    return html
+    proxies = {
+        'http': '139.224.37.83:3128',
+
+    }
+
+    # response = requests.get(url=url, headers=head,proxies=proxies)
+    retry_count = 5
+    # proxy = get_proxy().get("proxy")
+    proxy = '172.100.10.13:9698'
+    # proxies = {
+    #     'http':'http://{}'.format(proxy),
+    # }
+    proxies = {
+        # 'http': 'http://derrick:111111@172.100.10.13:9698',
+        'http': 'http://derrick:111111@54.186.245.186:3128',
+
+    }
+    print(proxies)
+    # exit()
+    while retry_count > 0:
+        try:
+            #response = requests.get(url=url, headers=head, proxies=proxies)
+            # 使用代理访问
+            response = requests.get(url=url,headers=head, proxies=proxies,timeout=5)
+            html = response.text
+            print('success')
+            return html
+        except Exception:
+            retry_count -= 1
+    # 删除代理池中代理
+    delete_proxy(proxy)
+
+    print('问题代理ip'+ proxy)
+    return None
+
+    # response = requests.get(url=url, headers=head)
+    # html = response.text
+    # return html
 
 
-def getdiv(html):
-    soup = BeautifulSoup(html, "html.parser")
-    div = soup.find("div", class_="pic-meinv")
-    return div
+def getdiv(html,url):
+    i = 0
+    while True:
+        i += 1
+        time.sleep(1)
+        print('第%d次尝试' % i)
+        while 1:
+            if html is None:
+                print('html 为none')
+                html = gethtml(url)
+            else:
+                break
+        soup = BeautifulSoup(html, "html.parser")
+        div = soup.find("div", class_="pic-meinv")
+
+        if div is None:
+            html = gethtml(url)
+            if html is None:
+                html = gethtml(url)
+                print('is None')
+            soup = BeautifulSoup(html, "html.parser")
+            div = soup.find("div", class_="pic-meinv")
+        else:
+            return div
 
 
 def geta(div, method1):
@@ -73,10 +128,18 @@ def getimg(div, method2):
 def savepic(i, img):
     head = gethead()
     wuhu = requests.get(url=img, headers=head)
-    where = r'/Users/mark/Downloads/美女%d.jpg' % (i+1)#linux系统的写法
+    where = r'/Users/mark/Downloads/美g%d.jpg' % (i+1)#linux系统的写法
     f = open(where, 'wb')
     f.write(wuhu.content)
 
+
+#获取代理ip
+def get_proxy():
+    return requests.get("http://127.0.0.1:5010/get/").json()
+
+#删除代理
+def delete_proxy(proxy):
+    requests.get("http://127.0.0.1:5010/delete/?proxy={}".format(proxy))
 
 def main():
     i = 0
@@ -84,13 +147,14 @@ def main():
     wish = int(input("请输入你想要的照片数，别太多了： "))
     if wish == 1:
         html = gethtml(url)
-        div = getdiv(html)
+        div = getdiv(html,url)
         img = getimg(div, method2)
         savepic(i, img)
     for i in range(wish):
         html = gethtml(url)
-        div = getdiv(html)
-        print(div);
+        # print(html)
+        div = getdiv(html,url)
+        # print(div)
         # exit()
         img = getimg(div, method2)
         url = geta(div, method1)
