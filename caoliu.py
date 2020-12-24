@@ -113,7 +113,7 @@ def main():
             index = "?fid=16"
             # "http://t66y.com/thread0806.php?fid=16"
         else:
-            index = 'fid=16&search=&page=%s' % (i+1)
+            index = '?fid=16&search=&page=%s' % (i+1)
             # index = "gaoqing_%s.html" % (i+1)
 
 
@@ -126,51 +126,52 @@ def main():
 
         time.sleep(1)
 
-        try:
-            ##设置request头
-            head = getHead()
-            print(head)
 
-            # 请求url地址
-            html = getURL(url, head, session)
+        ##设置request头
+        head = getHead()
+        print(head)
 
-            # 获取一级页面的所有li
-            allli = getLI(html)
-            ##图片张数定义
-            m = 0
-            ##tr 标签定义
-            y = 0
-            for item in allli:
-                y += 1
-                ##第一页前7条不抓（一般前面几条是发帖的公告和其他注意事项）
-                if i == 0 and y <= 9:
-                    continue
-                if re.findall(rex1, str(item)):
-                    url = base + re.findall(rex1, str(item))[0]
-                    print('当前抓取的url二级页面地址：%s' % (url))
+        # 请求url地址
+        html = getURL(url, head, session)
+        # 获取一级页面的所有li
+        allli = getLI(html)
+        ##图片张数定义
+        m = 0
+        ##tr 标签定义
+        y = 0
+        for item in allli:
+            y +=1
+            ##第一页前7条不抓（一般前面几条是发帖的公告和其他注意事项）
+            if i ==0 and y <= 9:
+                continue
+            if re.findall(rex1, str(item)):
+                url = base + re.findall(rex1, str(item))[0]
+                print('当前抓取的url二级页面地址：%s' % (url))
 
+                try:
                     ##设置二级页面request头
                     head = getHead()
                     # 请求url地址
                     html = getURL(url, head, session)
                     div = wuhuDIV(html)
-                    # print('div')
-                    # print(div)
-                    if re.findall(rex2, str(div)):
-                        imgUrlArr = getimg(div, rex2)
-                        # print(imgUrlArr)
-                        for img in imgUrlArr:
-                            m += 1
-                            print('第%d页数据，标签地址为：%s,图片地址为：%s,第%d张图片下载' % (i + 1, url, img, m))
+                except Exception:
+                    continue
+
+                # print('div')
+                # print(div)
+                if re.findall(rex2, str(div)):
+                    imgUrlArr = getimg(div,rex2)
+                    # print(imgUrlArr)
+                    for img in imgUrlArr:
+                        m += 1
+                        print('第%d页数据，标签地址为：%s,图片地址为：%s,第%d张图片下载' % (i+1, url,img,m))
+                        try:
 
                             # 下载当前图片a
-
-                            savepic(m, img, session)
+                            savepic(m, img,session)
                             time.sleep(1)
-        except Exception:
-            continue
-
-
+                        except  Exception:
+                            continue
 
 
 if __name__ == '__main__':
