@@ -92,7 +92,7 @@ def getimg(div, method2):
 
 def savepic(i, img,session):
     head = getHead()
-    wuhu = session.get(url=img, headers=head,timeout=7)
+    wuhu = session.get(url=img, headers=head)
     where = r'/Users/mark/Downloads/pictest/mark-g-%d.jpg' % (i)#linux系统的写法
     f = open(where, 'wb')
     f.write(wuhu.content)
@@ -164,8 +164,8 @@ def main():
                     # print(imgUrlArr)
                     for img in imgUrlArr:
                         m += 1
-                        print('第%d页数据，标签地址为：%s,图片地址为：%s,第%d张图片下载' % (i+1, url,img,m))
                         try:
+                            print('第%d页数据，标签地址为：%s,图片地址为：%s,第%d张图片下载' % (i + 1, url, img, m))
 
                             # 下载当前图片a
                             savepic(m, img,session)
