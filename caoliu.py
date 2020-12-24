@@ -69,7 +69,7 @@ def getURL(url, head,session):
         'http': 'http://derrick:111111@54.186.245.186:3128',
     }
     ##加上代理ip
-    response = session.get(url=url, headers=head,proxies=proxies,timeout=5)
+    response = session.get(url=url, headers=head,proxies=proxies,timeout=7)
     # response = requests.get(url=url, headers=head,timeout=5)
     html = response.text
     print(response.status_code)
@@ -90,9 +90,9 @@ def getimg(div, method2):
     img = re.findall(method2, str(div))
     return img
 
-def savepic(i, img):
+def savepic(i, img,session):
     head = getHead()
-    wuhu = requests.get(url=img, headers=head)
+    wuhu = session.get(url=img, headers=head,timeout=7)
     where = r'/Users/mark/Downloads/pictest/mark-g-%d.jpg' % (i)#linux系统的写法
     f = open(where, 'wb')
     f.write(wuhu.content)
@@ -100,8 +100,8 @@ def savepic(i, img):
 def main():
     print('开始...')
     m = 0
-    wish = int(input("请输入你想要的照片页数，别太多了： "))
-
+    #wish = int(input("请输入你想要的照片页数，别太多了： "))
+    wish =20
     # cookie 实例化
     c = requests.cookies.RequestsCookieJar()
     # 定义cookie
@@ -125,46 +125,52 @@ def main():
         # exit()
 
         time.sleep(1)
-        ##设置request头
-        head = getHead()
-        print(head)
 
-        #请求url地址
-        html = getURL(url, head,session)
+        try:
+            ##设置request头
+            head = getHead()
+            print(head)
 
-        #获取一级页面的所有li
-        allli = getLI(html)
-        ##图片张数定义
-        m = 0
-        ##tr 标签定义
-        y = 0
-        for item in allli:
-            y +=1
-            ##第一页前7条不抓（一般前面几条是发帖的公告和其他注意事项）
-            if i ==0 and y <= 9:
-                continue
-            if re.findall(rex1, str(item)):
-                url = base + re.findall(rex1, str(item))[0]
-                print('当前抓取的url二级页面地址：%s' % (url))
+            # 请求url地址
+            html = getURL(url, head, session)
 
-                ##设置二级页面request头
-                head = getHead()
-                # 请求url地址
-                html = getURL(url, head,session)
-                div = wuhuDIV(html)
-                # print('div')
-                # print(div)
-                if re.findall(rex2, str(div)):
-                    imgUrlArr = getimg(div,rex2)
-                    # print(imgUrlArr)
-                    for img in imgUrlArr:
-                        m += 1
-                        print('第%d页数据，标签地址为：%s,图片地址为：%s,第%d张图片下载' % (i+1, url,img,m))
+            # 获取一级页面的所有li
+            allli = getLI(html)
+            ##图片张数定义
+            m = 0
+            ##tr 标签定义
+            y = 0
+            for item in allli:
+                y += 1
+                ##第一页前7条不抓（一般前面几条是发帖的公告和其他注意事项）
+                if i == 0 and y <= 9:
+                    continue
+                if re.findall(rex1, str(item)):
+                    url = base + re.findall(rex1, str(item))[0]
+                    print('当前抓取的url二级页面地址：%s' % (url))
 
-                        # 下载当前图片a
+                    ##设置二级页面request头
+                    head = getHead()
+                    # 请求url地址
+                    html = getURL(url, head, session)
+                    div = wuhuDIV(html)
+                    # print('div')
+                    # print(div)
+                    if re.findall(rex2, str(div)):
+                        imgUrlArr = getimg(div, rex2)
+                        # print(imgUrlArr)
+                        for img in imgUrlArr:
+                            m += 1
+                            print('第%d页数据，标签地址为：%s,图片地址为：%s,第%d张图片下载' % (i + 1, url, img, m))
 
-                        savepic(m, img)
-                        time.sleep(1)
+                            # 下载当前图片a
+
+                            savepic(m, img, session)
+                            time.sleep(1)
+        except Exception:
+            continue
+
+
 
 
 if __name__ == '__main__':
