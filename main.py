@@ -63,7 +63,8 @@ def gethtml(url):
     # }
     proxies = {
         # 'http': 'http://derrick:111111@172.100.10.13:9698',
-        'http': 'http://derrick:111111@54.186.245.186:3128',
+        #'http': 'http://derrick:111111@54.186.245.186:3128',
+        'http': 'http://mark:111111@34.97.129.118:3128',
 
     }
     print(proxies)

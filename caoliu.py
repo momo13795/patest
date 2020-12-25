@@ -66,7 +66,8 @@ def getHead():
 def getURL(url, head,session):
     proxies = {
         # 'http': 'http://60.168.207.4:8888',
-        'http': 'http://derrick:111111@54.186.245.186:3128',
+        #'http': 'http://derrick:111111@54.186.245.186:3128',
+        'http': 'http://mark:111111@34.97.129.118:3128',
     }
     ##加上代理ip
     response = session.get(url=url, headers=head,proxies=proxies,timeout=7)
@@ -93,7 +94,7 @@ def getimg(div, method2):
 def savepic(i, img,session):
     head = getHead()
     wuhu = session.get(url=img, headers=head)
-    where = r'/Users/mark/Downloads/pictest/mark-g-%d.jpg' % (i)#linux系统的写法
+    where = r'/Users/mark/Downloads/pictest/mark-ga-%d.jpg' % (i)#linux系统的写法
     f = open(where, 'wb')
     f.write(wuhu.content)
 
@@ -148,14 +149,12 @@ def main():
                 url = base + re.findall(rex1, str(item))[0]
                 print('当前抓取的url二级页面地址：%s' % (url))
 
-                try:
-                    ##设置二级页面request头
-                    head = getHead()
-                    # 请求url地址
-                    html = getURL(url, head, session)
-                    div = wuhuDIV(html)
-                except Exception:
-                    continue
+                ##设置二级页面request头
+                head = getHead()
+                # 请求url地址
+                html = getURL(url, head, session)
+                div = wuhuDIV(html)
+
 
                 # print('div')
                 # print(div)
@@ -164,14 +163,12 @@ def main():
                     # print(imgUrlArr)
                     for img in imgUrlArr:
                         m += 1
-                        try:
-                            print('第%d页数据，标签地址为：%s,图片地址为：%s,第%d张图片下载' % (i + 1, url, img, m))
+                        print('第%d页数据，标签地址为：%s,图片地址为：%s,第%d张图片下载' % (i + 1, url, img, m))
 
-                            # 下载当前图片a
-                            savepic(m, img,session)
-                            time.sleep(1)
-                        except  Exception:
-                            continue
+                        # 下载当前图片a
+                        savepic(m, img,session)
+                        time.sleep(1)
+
 
 
 if __name__ == '__main__':
