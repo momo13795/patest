@@ -66,8 +66,10 @@ def getHead():
 def getURL(url, head,session):
     proxies = {
         # 'http': 'http://60.168.207.4:8888',
-        #'http': 'http://derrick:111111@54.186.245.186:3128',
-        'http': 'http://mark:111111@34.97.129.118:3128',
+        #'http': 'http://derrick:111111@54.186.245.186:3128',##（gong 代理）
+        #'http': 'http://mark:111111@34.97.129.118:3128',##自己代理（已废弃）
+        'http': 'http://mark:111111@35.220.216.199:3128',##自己的代理
+
     }
     ##加上代理ip
     response = session.get(url=url, headers=head,proxies=proxies,timeout=7)
@@ -108,6 +110,10 @@ def main():
     # 定义cookie
     c.set('__cfduid', cfduid)
     c.set('227c9_lastvisit', c9_lastvisit)
+    # c.set('UM_distinctid','1763cf32cb110d-06a8906ad0eb4d-c791039-1fa400-1763cf32cb24dc')
+    # c.set('CNZZDATA950900','cnzz_eid%3D790364290-1607340338-%26ntime%3D1607428238')
+    # c.set('__cfduid','d646897a36daff025a3e893736bd21eed1608205360')
+    # c.set('227c9_lastvisit','0%091608724404%09%2Fread.php%3Ftid%3D4244898')
     session.cookies.update(c)
     for i in range(wish):
         if i == 0:
