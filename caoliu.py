@@ -13,11 +13,14 @@ method2 = re.compile(r'src="(.*?)"')
 
 rex1 = re.compile(r'"(htm_data/\d+/\d+/.*?\d+.html)"')
 rex2 = re.compile(r'ess-data="(.*?)"')
+rex3 = re.compile(r'"htm_data/\d+/\d+/.*?\d+.html"\s+[^>]+\>(.*?)</')
+rex4 = re.compile(r'>([\u4e00-\u9fa5]+.*?)</')
 
 session = requests.session()
 cfduid = 'd9f4ecb7595c8be46440b8d62894a33bd1608701116'
 c9_lastvisit = '0%091608702730%09%2Fthread0806.php%3F'
 
+header = {}
 
 ualist = [
     "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:23.0) Gecko/20131011 Firefox/23.0",
@@ -55,23 +58,30 @@ ualist = [
 ##获取请求头
 
 
-def getHead():
-    head = {}
+def getHead(head):
+    #head = {}
     ua = random.choice(ualist)
     # head["referer"] = "http://t66y.com/"
     # head["Upgrade-Insecure-Requests"] = 1
-    head["User-Agent"] = ua
+    head["User-Agent"] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'
+    #head['Upgrade-Insecure-Requests'] =1
+    #head['Cookie'] = 'UM_distinctid=1763cf32cb110d-06a8906ad0eb4d-c791039-1fa400-1763cf32cb24dc; CNZZDATA950900=cnzz_eid%3D790364290-1607340338-%26ntime%3D1607428238; __cfduid=d646897a36daff025a3e893736bd21eed1608205360; 227c9_lastvisit=0%091608896266%09%2Fread.php%3Ftid%3D4248452'
     return head
 
 def getURL(url, head,session):
     proxies = {
         # 'http': 'http://60.168.207.4:8888',
         #'http': 'http://derrick:111111@54.186.245.186:3128',
-        'http': 'http://mark:111111@34.97.129.118:3128',
+        #'http': 'http://mark:111111@34.97.129.118:3128',
+        'http': 'http://mark:111111@35.220.216.199:3128',
+
     }
     ##加上代理ip
-    response = session.get(url=url, headers=head,proxies=proxies,timeout=7)
-    # response = requests.get(url=url, headers=head,timeout=5)
+    
+    #response = session.get(url=url, headers=head,proxies=proxies)
+    response = requests.get(url=url, headers=head,timeout=5)
+    response.encoding='gbk'
+
     html = response.text
     print(response.status_code)
     return html
@@ -91,25 +101,35 @@ def getimg(div, method2):
     img = re.findall(method2, str(div))
     return img
 
-def savepic(i, img,session):
-    head = getHead()
+def savepic(i, img,session,head):
+    head = getHead(head)
     wuhu = session.get(url=img, headers=head)
-    where = r'/Users/mark/Downloads/pictest/mark-ga-%d.jpg' % (i)#linux系统的写法
-    f = open(where, 'wb')
+    time2 = time.strftime('%Y-%m-%d-%H:%M:%S',time.localtime())
+    num = random.randint(1000000000,9999999999)
+    where = r'/www/pic/picture/mark-ga-%d-%d.jpg' %(i,num) 
+    f = open(where, 'wb') 
     f.write(wuhu.content)
 
 def main():
     print('开始...')
     m = 0
-    #wish = int(input("请输入你想要的照片页数，别太多了： "))
+    guolv = int(input("输入过滤的树木： "))
     wish =20
+    isguolv = int(input("输入是否过滤： "))
+    first =  int(input("输入起始页数： "))
+    end  =  int(input("输入结束页数： "))
+    #for i in range(first,end):
     # cookie 实例化
     c = requests.cookies.RequestsCookieJar()
     # 定义cookie
     c.set('__cfduid', cfduid)
     c.set('227c9_lastvisit', c9_lastvisit)
+    #c.set('UM_distinctid','1763cf32cb110d-06a8906ad0eb4d-c791039-1fa400-1763cf32cb24dc')
+    #c.set('CNZZDATA950900','cnzz_eid%3D790364290-1607340338-%26ntime%3D1607428238')
+    #c.set('__cfduid','d646897a36daff025a3e893736bd21eed1608205360')
+    #c.set('227c9_lastvisit','0%091608896266%09%2Fread.php%3Ftid%3D4248452')
     session.cookies.update(c)
-    for i in range(wish):
+    for i in range(first,end):
         if i == 0:
             index = "?fid=16"
             # "http://t66y.com/thread0806.php?fid=16"
@@ -119,7 +139,8 @@ def main():
 
 
         url = baseurl+index
-        # url = "http://www.win4000.com/wallpaper_detail_113430.html"
+        firstUrl = baseurl + index
+        #url = "http://www.win4000.com/wallpaper_detail_113430.html"
         page = '当前抓取第{}页的url地址：{}'.format(i+1,url)
         print(page)
         # print('当前抓取第%s页的url地址：%s' %(i+1,url))
@@ -129,7 +150,9 @@ def main():
 
 
         ##设置request头
-        head = getHead()
+        head = {}
+        head["referer"] = "http://t66y.com/index.php"
+        head = getHead(head)
         print(head)
 
         # 请求url地址
@@ -143,14 +166,20 @@ def main():
         for item in allli:
             y +=1
             ##第一页前7条不抓（一般前面几条是发帖的公告和其他注意事项）
-            if i ==0 and y <= 9:
+            if isguolv == 1 and  y <= guolv:
                 continue
-            if re.findall(rex1, str(item)):
-                url = base + re.findall(rex1, str(item))[0]
-                print('当前抓取的url二级页面地址：%s' % (url))
+            print('当前第%d条li' %y)
 
+            if re.findall(rex1, str(item)):
+                #print(item)
+                url = base + re.findall(rex1, str(item))[0]
+                title = re.findall(rex4, str(item))[0]
+                print('当前抓取的url二级页面地址：%s 标题为：%s' % (url,title))
+                #print(title)
                 ##设置二级页面request头
-                head = getHead()
+                head = {}
+                head["referer"] = firstUrl
+                head = getHead(head)
                 # 请求url地址
                 html = getURL(url, head, session)
                 div = wuhuDIV(html)
@@ -166,7 +195,7 @@ def main():
                         print('第%d页数据，标签地址为：%s,图片地址为：%s,第%d张图片下载' % (i + 1, url, img, m))
 
                         # 下载当前图片a
-                        savepic(m, img,session)
+                        savepic(m, img,session,head)
                         time.sleep(1)
 
 

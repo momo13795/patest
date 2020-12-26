@@ -64,8 +64,8 @@ def gethtml(url):
     proxies = {
         # 'http': 'http://derrick:111111@172.100.10.13:9698',
         #'http': 'http://derrick:111111@54.186.245.186:3128',
-        'http': 'http://mark:111111@34.97.129.118:3128',
-
+        #'http': 'http://mark:111111@34.97.129.118:3128',
+        'http': 'http://mark:111111@35.220.216.199:3128',
     }
     print(proxies)
     # exit()
@@ -129,7 +129,7 @@ def getimg(div, method2):
 def savepic(i, img):
     head = gethead()
     wuhu = requests.get(url=img, headers=head)
-    where = r'/Users/mark/Downloads/美g%d.jpg' % (i+1)#linux系统的写法
+    where = r'/www/pic/美ag%d.jpg' % (i+1)#linux系统的写法
     f = open(where, 'wb')
     f.write(wuhu.content)
 
