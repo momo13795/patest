@@ -20,6 +20,9 @@ session = requests.session()
 cfduid = 'd9f4ecb7595c8be46440b8d62894a33bd1608701116'
 c9_lastvisit = '0%091608702730%09%2Fthread0806.php%3F'
 
+
+save_path = r'C:\Users\mark\www\pic\美ag%d.jpg'
+
 header = {}
 
 ualist = [
@@ -100,12 +103,16 @@ def getimg(div, method2):
     img = re.findall(method2, str(div))
     return img
 
-def savepic(i, img,session,head):
+def savepic(i, img,session,head,save_path):
     head = getHead(head)
     wuhu = session.get(url=img, headers=head)
     time2 = time.strftime('%Y-%m-%d-%H:%M:%S',time.localtime())
     num = random.randint(1000000000,9999999999)
-    where = r'/www/pic/picture/mark-ga-%d-%d.jpg' %(i,num) 
+    save_path = save_path + 'mark-ga-%d-%d.jpg'  %(i,num)
+    print(save_path)
+    where = save_path % (i+1)
+    #where = r'C:\Users\mark\www\pic\美ag%d.jpg' % (i+1)#linux系统的写法
+
     f = open(where, 'wb') 
     f.write(wuhu.content)
 
@@ -194,7 +201,7 @@ def main():
                         print('第%d页数据，标签地址为：%s,图片地址为：%s,第%d张图片下载' % (i + 1, url, img, m))
 
                         # 下载当前图片a
-                        savepic(m, img,session,head)
+                        savepic(m, img,session,head,save_path)
                         time.sleep(1)
 
 
