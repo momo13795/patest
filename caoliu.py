@@ -74,7 +74,6 @@ def getURL(url, head,session):
         #'http': 'http://derrick:111111@54.186.245.186:3128',
         #'http': 'http://mark:111111@34.97.129.118:3128',
         'http': 'http://mark:111111@35.220.216.199:3128',
-
     }
     ##加上代理ip
     
