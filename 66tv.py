@@ -84,7 +84,7 @@ def getURL(url, head, session):
     }
     ##加上代理ip
 
-    response = session.get(url=url, headers=head,proxies=proxies)
+    response = session.get(url=url, headers=head,proxies=proxies,timeout=5)
     # response = requests.get(url=url, headers=head, timeout=5)
     response.encoding = 'utf-8'
 
@@ -183,8 +183,12 @@ def main():
                     print('当前抓取的url二级页面地址：%s 标题为：%s' % (url, title))
 
                 # 请求url地址
-                html = getURL(url, head, session)
-                div = wuhuDIV(html)
+                try :
+                    html = getURL(url, head, session)
+                    div = wuhuDIV(html)
+                except Exception :
+                    print('当前li异常')
+                    continue
 
                 if re.findall(rex2, str(div)):
                     imgUrlArr = getimg(div, rex2)
