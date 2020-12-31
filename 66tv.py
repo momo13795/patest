@@ -123,11 +123,9 @@ def savepic(i, img, session, head, save_path,dirpath):
 
 
     where = save_path % (i,num)
-    print(where)
-
     # where = r'C:\Users\mark\www\pic\美ag%d.jpg' % (i+1)#linux系统的写法
     imgstatus_code = wuhu.status_code
-    print('图片地址状态：%d' %imgstatus_code)
+    # print('图片地址状态：%d' %imgstatus_code)
     if wuhu.status_code != 200:
         return
     f = open(where, 'wb')
@@ -178,8 +176,9 @@ def main():
             if re.findall(rex1, str(item)):
                 url = baseurl + re.findall(rex1, str(item))[0]
 
-                title = re.findall(rex4, str(item))[0]
+                title = re.findall(rex4, str(item))
                 if title:
+                    title = re.findall(rex4, str(item))[0]
                     print('当前抓取的url二级页面地址：%s 标题为：%s' % (url, title))
 
                 # 请求url地址

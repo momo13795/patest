@@ -4,6 +4,8 @@ import requests
 import re
 import time
 import random
+import os
+
 import sys
 
 baseurl = "http://t66y.com/thread0806.php"
@@ -14,14 +16,22 @@ method2 = re.compile(r'src="(.*?)"')
 rex1 = re.compile(r'"(htm_data/\d+/\d+/.*?\d+.html)"')
 rex2 = re.compile(r'ess-data="(.*?)"')
 rex3 = re.compile(r'"htm_data/\d+/\d+/.*?\d+.html"\s+[^>]+\>(.*?)</')
-rex4 = re.compile(r'>([\u4e00-\u9fa5]+.*?)</')
+rex4 = re.compile(r'>\[?([\u4e00-\u9fa5]+.*?)</')
 
 session = requests.session()
 cfduid = 'd9f4ecb7595c8be46440b8d62894a33bd1608701116'
 c9_lastvisit = '0%091608702730%09%2Fthread0806.php%3F'
 
 
-save_path = r'C:\Users\mark\www\pic\caoliu\caoliu-%d-%d.jpg'
+#save_path = r'C:\Users\mark\www\pic\caoliu\caoliu-%d-%d.jpg'
+
+
+
+##文件夹路径
+save_path = 'C:\\Users\\mark\\www\\pic\\caoliu\\'
+time2 = time.strftime('%Y-%m-%d', time.localtime())
+dirpath = save_path + time2
+path = save_path + time2  +  '\\caoliutv-%d-%d.jpg'
 
 header = {}
 
@@ -103,7 +113,7 @@ def getimg(div, method2):
     img = re.findall(method2, str(div))
     return img
 
-def savepic(i, img,session,head,save_path):
+def savepic(i, img,session,head,save_path,dirpath):
     head = getHead(head)
     wuhu = session.get(url=img, headers=head,timeout=10)
     time2 = time.strftime('%Y-%m-%d-%H:%M:%S',time.localtime())
@@ -111,6 +121,15 @@ def savepic(i, img,session,head,save_path):
     where = save_path % (i,num)
     #where = r'C:\Users\mark\www\pic\美ag%d.jpg' % (i+1)#linux系统的写法
 
+    if not os.path.exists(dirpath):
+        os.mkdir(dirpath)
+    where = save_path % (i, num)
+
+    # where = r'C:\Users\mark\www\pic\美ag%d.jpg' % (i+1)#linux系统的写法
+    imgstatus_code = wuhu.status_code
+    # print('图片地址状态：%d' % imgstatus_code)
+    if wuhu.status_code != 200:
+        return
     f = open(where, 'wb') 
     f.write(wuhu.content)
 
@@ -177,8 +196,10 @@ def main():
             if re.findall(rex1, str(item)):
                 #print(item)
                 url = base + re.findall(rex1, str(item))[0]
-                title = re.findall(rex4, str(item))[0]
-                print('当前抓取的url二级页面地址：%s 标题为：%s' % (url,title))
+                title = re.findall(rex4, str(item))
+                if title:
+                    title = re.findall(rex4, str(item))[0]
+                    print('当前抓取的url二级页面地址：%s 标题为：%s' % (url, title))
                 #print(title)
                 ##设置二级页面request头
                 head = {}
@@ -199,7 +220,7 @@ def main():
                         print('第%d页数据，标签地址为：%s,图片地址为：%s,第%d张图片下载' % (i + 1, url, img, m))
 
                         # 下载当前图片a
-                        savepic(m, img,session,head,save_path)
+                        savepic(m, img,session,head,path,dirpath)
                         time.sleep(1)
 
 
