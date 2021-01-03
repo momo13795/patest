@@ -18,7 +18,7 @@ rex2 = re.compile(r'src="(.*?)"')
 
 
 ##文件夹路径
-save_path = 'C:\\Users\\mark\\www\\pic\\66tvthread\\'
+save_path = 'H:\\pa-pic\\66tvthread\\'
 time2 = time.strftime('%Y-%m-%d', time.localtime())
 dirpath = save_path + time2
 
@@ -99,7 +99,7 @@ def getURL(queue,session,list_queue,i):
         html = response.text
         print('列页访问情况code:%d'% response.status_code)
         if response.status_code != 200:
-            return
+            continue
         # 获取一级页面的所有li
         allli = getLI(html)
 
@@ -137,7 +137,7 @@ def paRun(queue,session,result_queue,i):
         html = response.text
         # print('detail访问情况code:%d'% response.status_code)
         if response.status_code != 200:
-            return
+            continue
         # detail 所有图片
         allli = wuhuDIV(html)
 
@@ -168,7 +168,7 @@ def savePic(queue,session,result_queue,i,dirpath,save_path):
             # response = requests.get(url=url, headers=head)
             print('图片下载情况code:%d' % response.status_code)
             if response.status_code != 200:
-                return
+                continue
             num = random.randint(1000000000, 9999999999)
             if not os.path.exists(dirpath):
                 os.makedirs(dirpath)

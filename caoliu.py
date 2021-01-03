@@ -5,6 +5,7 @@ import re
 import time
 import random
 import os
+from fake_useragent import UserAgent
 
 import sys
 
@@ -28,7 +29,7 @@ c9_lastvisit = '0%091608702730%09%2Fthread0806.php%3F'
 
 
 ##文件夹路径
-save_path = 'C:\\Users\\mark\\www\\pic\\caoliu\\'
+save_path = 'H:\\pa-pic\\caoliu\\'
 time2 = time.strftime('%Y-%m-%d', time.localtime())
 dirpath = save_path + time2
 path = save_path + time2  +  '\\caoliutv-%d-%d.jpg'
@@ -73,10 +74,14 @@ ualist = [
 
 def getHead(head):
     #head = {}
-    ua = random.choice(ualist)
+    # ua = random.choice(ualist)
+    ua = UserAgent()
+
     # head["referer"] = "http://t66y.com/"
     # head["Upgrade-Insecure-Requests"] = 1
-    head["User-Agent"] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'
+    head["User-Agent"] = ua.random
+
+    # head["User-Agent"] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'
     #head['Upgrade-Insecure-Requests'] =1
     #head['Cookie'] = 'UM_distinctid=1763cf32cb110d-06a8906ad0eb4d-c791039-1fa400-1763cf32cb24dc; CNZZDATA950900=cnzz_eid%3D790364290-1607340338-%26ntime%3D1607428238; __cfduid=d646897a36daff025a3e893736bd21eed1608205360; 227c9_lastvisit=0%091608896266%09%2Fread.php%3Ftid%3D4248452'
     return head
@@ -115,14 +120,14 @@ def getimg(div, method2):
 
 def savepic(i, img,session,head,save_path,dirpath):
     head = getHead(head)
-    wuhu = session.get(url=img, headers=head,timeout=10)
+    wuhu = session.get(url=img, headers=head,timeout=20)
     time2 = time.strftime('%Y-%m-%d-%H:%M:%S',time.localtime())
     num = random.randint(1000000000,9999999999)
     where = save_path % (i,num)
     #where = r'C:\Users\mark\www\pic\美ag%d.jpg' % (i+1)#linux系统的写法
 
     if not os.path.exists(dirpath):
-        os.mkdir(dirpath)
+        os.makedirs(dirpath)
     where = save_path % (i, num)
 
     # where = r'C:\Users\mark\www\pic\美ag%d.jpg' % (i+1)#linux系统的写法

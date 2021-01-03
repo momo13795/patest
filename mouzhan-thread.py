@@ -7,25 +7,33 @@ import re
 import os
 import random
 from fake_useragent import UserAgent
-
-baseurl = "https://www.7aipai.com"
+baseurl = "https://mouzhan.org"
 
 rex1 = re.compile(r'href="(\/\S+\d.html)"')
 rex2 = re.compile(r'src="(.*?)"')
-rex4 = re.compile(r'title="(.*?)"')
+
+rex3 = re.compile(r'org/(.*?)/')
+rex4 = re.compile(r'[?[\u4e00-\u9fa5]+.*?]')
+rex5 = re.compile(r'href="\/\S+\d.html"\s+\S+\s+\S+>(.*?)</')
 
 session = requests.session()
 
 
 ##文件夹路径
-save_path = 'H:\\pa-pic\\7aipaithread\\'
+save_path = 'H:\\pa-pic\\mouzhan-thread\\'
+
 time2 = time.strftime('%Y-%m-%d', time.localtime())
 dirpath = save_path + time2
-path = save_path + time2  +  '\\7aipai-%d.jpg'
+path = save_path + time2  + '\\mouzhan-%d.jpg'
+
 header = {
 
 }
 
+
+
+##图片类型(jqmt:激情图片，xazp:性爱自拍)
+category  = ['jqmt','xazp']
 
 def getHead():
     # ua = random.choice(ualist)
@@ -43,12 +51,13 @@ def getHead():
 
 def wuhuDIV(html):
     soup = BeautifulSoup(html, 'html.parser')
-    all_links = soup.find('div', class_='content_left')
+    all_links = soup.find('div', class_='tpc_content do_not_catch')
     return all_links
 
 
 ##列表访问
 def getURL(queue,session,list_queue,i):
+
     time.sleep(2)
     head = getHead()
     ##加上代理防止ip被封
@@ -59,7 +68,10 @@ def getURL(queue,session,list_queue,i):
 
     while queue.empty() is not True:
         url = queue.get()
-        print('当前url: %s,第%d个线程' % (url,i+1))
+        videocategory = re.findall(rex3, url)
+        videocategory = videocategory[0]
+
+        # print('当前url: %s,第%d个线程' % (url,i+1))
         response = session.get(url=url, headers=head,proxies=proxies)
         # response = requests.get(url=url, headers=head, timeout=10)
         # response = requests.get(url=url, headers=head)
@@ -75,9 +87,13 @@ def getURL(queue,session,list_queue,i):
             if re.findall(rex1, str(item)):
                 url = baseurl + re.findall(rex1, str(item))[0]
                 title = re.findall(rex4, str(item))
+                if videocategory == 'jqmt':
+                    title = re.findall(rex5, str(item))
+                    pass
                 if title:
-                    title = re.findall(rex4, str(item))
-                    # print('当前抓取的url二级页面地址：%s 标题为：%s' % (url, title))
+                    resultTitle = ''
+                    for realTitle in title:
+                        resultTitle = resultTitle + realTitle
                 list_queue.put(url)  # Queue队列的put方法用于向Queue队列中放置元素，由于Queue是先进先出队列，所以先被Put的URL也就会被先get出来。
 
 
@@ -112,7 +128,6 @@ def paRun(queue,session,result_queue,i):
         if re.findall(rex2, str(allli)):
             imgUrlArr = getimg(allli, rex2)
             for img in imgUrlArr:
-                img = baseurl + img
                 result_queue.put(img)
                 pass
     pass
@@ -127,12 +142,10 @@ def savePic(queue,session,result_queue,i,dirpath,save_path):
         'http': 'http://mark:111111@35.220.216.199:3128',
     }
     while queue.empty() is not True:
-
-
         try:
             url = queue.get()
             print('当前url: %s,第%d个线程' % (url, i + 1))
-            response = session.get(url=url, headers=head, proxies=proxies,timeout=5)
+            response = session.get(url=url, headers=head, proxies=proxies, timeout=15)
             # response = requests.get(url=url, headers=head, timeout=10)
             # response = requests.get(url=url, headers=head)
             print('图片下载情况code:%d' % response.status_code)
@@ -153,25 +166,12 @@ def savePic(queue,session,result_queue,i,dirpath,save_path):
 
 def getLI(html):
     soup = BeautifulSoup(html, 'html.parser')
-    allli = soup.find_all('li', class_='i_list list_n2')
-    return allli
+    all_links = soup.find_all('main', class_='site-main',attrs={"role":"main"})
 
-# 爬取文章详情页
-def get_detail_html(detail_url_list, id):
-    while True:
-        url = detail_url_list.get() #Queue队列的get方法用于从队列中提取元素
-        if url is None:
-            break
-        time.sleep(2)  # 延时2s，模拟网络请求和爬取文章详情的过程
-        print("thread {id}: get {url} detail finished".format(id=id,url=url)) #打印线程id和被爬取了文章内容的url
-
-# 爬取文章列表页
-def get_detail_url(queue):
-    for i in range(10000):
-        time.sleep(1) # 延时1s，模拟比爬取文章详情要快
-        queue.put("http://testedu.com/{id}".format(id=i))#Queue队列的put方法用于向Queue队列中放置元素，由于Queue是先进先出队列，所以先被Put的URL也就会被先get出来。
-        print("get detail url {id} end".format(id=i))#打印出得到了哪些文章的url
-
+    all_links = all_links[1]
+    soup2 = BeautifulSoup(str(all_links), 'html.parser')
+    all_links = soup2.find_all('div', class_='post-wrapper-hentry')
+    return all_links
 #主函数
 if __name__ == "__main__":
     ##进程开始时间
@@ -182,38 +182,36 @@ if __name__ == "__main__":
     detail_queue = Queue()
     result_queue = Queue()
 
-    #
-    # # cookie 实例化
-    # c = requests.cookies.RequestsCookieJar()
-    # # 定义cookie
-    # c.set('PHPSESSID', 'n5q3oqqh0qcl7uhirvanj18kik')
-    # session.cookies.update(c)
-
-    for i in range(page):
-        if i == 0:
-            index = ""
+    for videocategory in category:
+        if videocategory == 'jqmt':
+            print('当前抓取的图片是激情图片')
         else:
-            index = '/index_%d.html' % (i + 1)
-        url = baseurl + index
-        print('当前抓取第{}页的url地址：{}'.format(i + 1, url))
-        base.put(url)
+            print('当前抓取的图片是性爱自拍')
 
-    # print('base queue 开始大小 %d' % base.qsize())
+        for i in range(page):
+            if i == 0:
+                index = "/"
+            else:
+                index = '/page/%d/' % (i + 1)
+            url = baseurl + '/' +videocategory +  index
+            pageurl = baseurl + '/' + index
+            print('当前抓取第{}页的url地址：{},类型为{}'.format(i + 1, url,videocategory))
+            base.put(url)
+
     print ("先进先出队列：%s;是否为空：%s；多大,%s;是否满,%s" % (base.queue, base.empty(), base.qsize(), base.full()))
     print('base queue 开始大小 %d' % base.qsize())
-
     ##开启10个进程来获取详情
     list_jin = 20
     detail_jin = 20
     pic_jin = 20
 
-    # list_jin = page
-    # detail_jin = page
-    # pic_jin = page
-    # if page > 10:
-    #     list_jin = 10
-    #     detail_jin = 10
-    #     pic_jin = 10
+    list_jin = page
+    detail_jin = page
+    pic_jin = page
+    if page > 10:
+        list_jin = 10
+        detail_jin = 10
+        pic_jin = 10
 
     ##列表进程获取队列
     for index in range(list_jin):
@@ -224,8 +222,6 @@ if __name__ == "__main__":
         thread.join()
 
     print('list queue 开始大小 %d' % list_queue.qsize())
-
-
     ##detail进程获取队列
     for index in range(detail_jin):
         # print('index:%d' %index)

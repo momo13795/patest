@@ -21,7 +21,7 @@ session = requests.session()
 
 
 ##文件夹路径
-save_path = 'C:\\Users\\mark\\www\\pic\\66tv2\\'
+save_path = 'H:\\pa-pic\\66tv2\\'
 time2 = time.strftime('%Y-%m-%d', time.localtime())
 dirpath = save_path + time2
 path = save_path + time2  +  '\\66tvtv-%d-%d.jpg'
