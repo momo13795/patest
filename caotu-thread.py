@@ -166,6 +166,8 @@ def getLI(html):
     soup = BeautifulSoup(html, 'html.parser')
     all_links = soup.find_all('a', class_='card__media')
     return all_links
+
+
 #主函数
 if __name__ == "__main__":
     ##进程开始时间
@@ -190,6 +192,7 @@ if __name__ == "__main__":
 
     print ("先进先出队列：%s;是否为空：%s；多大,%s;是否满,%s" % (base.queue, base.empty(), base.qsize(), base.full()))
     print('base queue 开始大小 %d' % base.qsize())
+    exit()
     ##开启10个进程来获取详情
     list_jin = 20
     detail_jin = 20
@@ -210,8 +213,8 @@ if __name__ == "__main__":
         thread.daemon = True  # 随主线程退出而退出
         thread.start()
         thread.join()
-
     print('list queue 开始大小 %d' % list_queue.qsize())
+
     ##detail进程获取队列
     for index in range(detail_jin):
         # print('index:%d' %index)
@@ -219,8 +222,6 @@ if __name__ == "__main__":
         threadDetail.daemon = True  # 随主线程退出而退出
         threadDetail.start()
         threadDetail.join()
-
-
     print('detail queue 开始大小 %d' % detail_queue.qsize())
 
 
@@ -231,7 +232,6 @@ if __name__ == "__main__":
         threadPic.daemon = True  # 随主线程退出而退出
         threadPic.start()
         threadPic.join()
-
     print('pic queue 开始大小 %d' % result_queue.qsize())
 
 
