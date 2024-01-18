@@ -6,7 +6,9 @@ import time
 import random
 import os
 from fake_useragent import UserAgent
-
+import threading
+from concurrent.futures import ThreadPoolExecutor
+import concurrent.futures.thread
 
 import sys
 
@@ -40,10 +42,17 @@ all_ip_list = []  #用于存放从网站上抓取到的ip
 
 
 ##文件夹路径
-save_path = '/Users/jucce/www/picture/'
+# save_path = '/Users/jucce/www/picture/'
+# time2 = time.strftime('%Y-%m-%d', time.localtime())
+# dirpath = save_path + time2
+# path = save_path + time2  +  '/caoliutv-%d-%d.jpg'
+
+
+save_path = 'H:\\pa-pic\\caoliu\\'
 time2 = time.strftime('%Y-%m-%d', time.localtime())
 dirpath = save_path + time2
-path = save_path + time2  +  '/caoliutv-%d-%d.jpg'
+# path = dirpath  +  '\\caoliutv-%d-%d.jpg'
+path = dirpath + '\\caoliutv-%d(总)-%d(分)-%d(随机数).jpg'
 
 header = {}
 
@@ -96,14 +105,16 @@ def getHead(head):
     return head
 
 def getProxy():
-    username = ""
-    country = "us"
-    password = ""
+
     # proxy = f'http://user-tasssa12:test123@gate.visitxiangtan.com:7000'
     # proxy = f'http://user-tasssa12:test123@gate.visitxiangtan.com:7000'
     # proxy = f'http://127.0.0.1:58591'
-    proxy = f'https://user-tasssa12:test123@china-gate.visitxiangtan.com:8000'
-    # proxy = f'http://user-spnxw1ewia:123456789@162.55.196.140:20000'
+    # proxy = f'https://user-tasssa12:test1234@china-gate.visitxiangtan.com:8000'
+    # proxy = f'http://35.220.154.111:16443'
+
+    # proxy = 'https://tesaaa:test123@china-gate.visitxiangtan.com:8000'
+    proxy = '127.0.0.1:58591'
+
     proxies = {
         'http': proxy,
         'https': proxy,
@@ -112,45 +123,58 @@ def getProxy():
 
 
 def getURL(url, head,session, proxies):
-    print("当前请求的 url地址:{}".format(url))
+    time.sleep(random.randint(1, 2))
 
+    # print("当前请求的 url地址:{}".format(url))
 
-    ##加上代理ip
-    if proxies:
-        # url = 'http://ipinfo.io/json'
-        # url = 'http://youtube.com'
-        response = session.get(url=url, headers=head, proxies=proxies, timeout=20, verify=False)
-        # response = session.get(url=url, headers=head, proxies=proxies, timeout=10, verify=False)
-    else:
-         response = requests.get(url=url, headers=head,timeout=20)
-    # response.encoding='gbk'
+    try:
+        ##加上代理ip
+        if proxies:
+            # url = 'http://ipinfo.io/json'
+            # url = 'http://youtube.com'
+            response = session.get(url=url, headers=head, proxies=proxies, timeout=20)
+            # response = session.get(url=url, headers=head, proxies=proxies, timeout=20, verify=False)
+            # response = session.get(url=url, headers=head, proxies=proxies, timeout=10, verify=False)
+        else:
+            response = requests.get(url=url, headers=head, timeout=20)
+        # response.encoding='gbk'
 
-    html = response.text
-    print(response.status_code)
-    # print(response.text)
+        if response.status_code != 200:
+            print('详情页或者列表页状态不正常，地址为%s' % (url))
+            return
+        html = response.text
+        # print(response.status_code)
+        # print(response.text)
+        return html
+    except Exception as msg:
+        print('异常图片---地址为%s, 异常内容: %s' % (url, msg))
 
-    return html
 
 def getLI(html):
     soup = BeautifulSoup(html, 'html.parser')
-
     allli = soup.find_all('tr', class_='tr3 t_one tac')
     return allli
 
+def getDetailTitle(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    title = soup.find('h4',  class_='f16')
+    return title
 
 def wuhuDIV(html):
     soup = BeautifulSoup(html, 'html.parser')
     all_links = soup.find('div', class_='tpc_content do_not_catch')
     return all_links
+
 def getimg(div, method2):
     img = re.findall(method2, str(div))
     return img
 
-def savepic(i, img,session,head,save_path,dirpath, proxies):
+def savepic(sum,liNum, img,session,head,save_path,dirpath, proxies, page):
     try:
         # head = getHead(head)
         if proxies:
-            wuhu = session.get(url=img, headers=head, timeout=20, proxies=proxies, verify=False)
+            # wuhu = session.get(url=img, headers=head, timeout=20, proxies=proxies, verify=False)
+            wuhu = session.get(url=img, headers=head, timeout=20, proxies=proxies)
         else:
             wuhu = session.get(url=img, headers=head, timeout=20)
 
@@ -158,28 +182,25 @@ def savepic(i, img,session,head,save_path,dirpath, proxies):
 
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
-        where = save_path % (i, num)
-        print("图片访问状态 %d， 图片地址 %s" % (wuhu.status_code, img))
+        where = save_path % (sum, liNum, num)
+        # print("图片访问状态 %d， 图片地址 %s" % (wuhu.status_code, img))
         if wuhu.status_code != 200:
+            print('状态不正确---当前第%d页---图片地址为%s' % (page+1, img))
             return
         f = open(where, 'wb')
         f.write(wuhu.content)
     except Exception:
-        print('异常图片地址：{}' + format(img))
+        print('异常图片当前第%d页---图片地址为%s' % (page + 1, img))
 
 def main():
-    print('开始...')
-    m = 0
+    guolv = 9
+    print('开始爬虫草榴地址...')
     isguolv = int(input("输入是否过滤(1或者0)： "))
     if isguolv:
         guolv = int(input("输入过滤的数目： "))
 
-    wish =20
-
     isyuanchuang = int(input("输入是否需要原创(1或者0)： "))
-
     isproxy = int(input("输入是否需要代理(1或者0)： "))
-
     first =  int(input("输入起始页数： "))
     end  =  int(input("输入结束页数： "))
 
@@ -204,18 +225,14 @@ def main():
             index = '?fid=16&search=&page=%s' % (i+1)
             # index = "gaoqing_%s.html" % (i+1)
 
-
+        # 拼接后的详细地址
         url = baseurl+index
 
         firstUrl = baseurl + index
-        #url = "http://www.win4000.com/wallpaper_detail_113430.html"
-        page = '当前抓取第{}页的url地址：{}'.format(i+1,url)
+
+        page = '当前抓取第{}页的url地址为：{}'.format(i+1,url)
         print(page)
         # print('当前抓取第%s页的url地址：%s' %(i+1,url))
-        # exit()
-
-        # time.sleep(1)
-
 
         ##设置request头
         head = {"referer": "http://t66y.com/index.php"}
@@ -223,7 +240,7 @@ def main():
         head["User-Agent"] = ua.random
 
         # head = getHead(head)
-        print(head)
+        # print(head)
 
         # 请求列表url地址
         html = getURL(url, head, session, proxies)
@@ -231,23 +248,23 @@ def main():
         # 获取一级页面的所有li
         allli = getLI(html)
 
+        # print(allli)
         ##图片张数定义
         m = 0
         ##tr 标签定义
         y = 0
+        print("当前第%d页数据" % i)
         for item in allli:
-            y +=1
-
+            y += 1
             ##第一页前7条不抓（一般前面几条是发帖的公告和其他注意事项）
-            if isguolv == 1 and y <= guolv:
+            if isguolv == 1 and i == 0 and y <= guolv:
                 continue
-            print('当前第%d条li' %y)
+            print('当前第%d条li' % (y) )
 
             ## 判断是否是[原创]
             if isyuanchuang == 1:
                 if not re.findall(rex3, str(item)):
                     continue
-
 
             if re.findall(rex1, str(item)):
                 # print(item)
@@ -257,6 +274,13 @@ def main():
                 title = re.findall(rex4, str(item))
                 if title:
                     title = re.findall(rex4, str(item))[0]
+                    dirpath = save_path + time2
+                    dirpath = dirpath + '\\' + title
+                    path = dirpath + '\\caoliutv-%d(总)-%d(分)-%d(随机数).jpg'
+                    print('当前目录地址 %s' % dirpath)
+                    if not os.path.exists(dirpath):
+                        os.makedirs(dirpath)
+
                     print('当前抓取的url二级页面地址：%s 标题为：%s' % (url, title))
                 # print(title)
                 # exit()
@@ -271,24 +295,23 @@ def main():
                 html = getURL(url, head, session, proxies)
                 div = wuhuDIV(html)
 
-
-                # print('div')
-                # print(div)
                 if re.findall(rex2, str(div)):
 
                     imgUrlArr = getimg(div,rex2)
                     # print(imgUrlArr)
+                    liNum = 0
                     for img in imgUrlArr:
                         m += 1
-                        print('第%d页数据，标签地址为：%s,图片地址为：%s,第%d张图片下载' % (i + 1, url, img, m))
+                        liNum +=1
+                        print('下载中。。。。第%d页数据，标签地址为：%s,图片地址为：%s,总共%d张图片，当前地址第%d张' % (i + 1, url, img, m,liNum))
 
                         # 下载当前图片
-                        savepic(m, img,session,head,path,dirpath, proxies)
+                        savepic(m,liNum, img,session,head,path,dirpath, proxies, i)
 
                         time.sleep(2)
-'''
+"""
   通过详情页去下载图片
-'''
+"""
 def detail():
     url = str(input("请输入详情页地址： "))
     isproxy = int(input("输入是否需要代理(1或者0)： "))
@@ -307,18 +330,39 @@ def detail():
     ua = UserAgent()
     head["User-Agent"] = ua.chrome
 
+
+
     #访问详情页
     html = getURL(url, head, session, proxies)
+
+    #获取title 标签
+    titleLable = getDetailTitle(html)
+    print(titleLable)
+    title = re.findall(rex4, str(titleLable))
+    if title:
+        title = re.findall(rex4, str(titleLable))[0]
+        dirpath = save_path + time2
+        dirpath = dirpath + '\\' + title
+        path = dirpath + '\\caoliutv-%d(总)-%d(分)-%d(随机数).jpg'
+        print('当前目录地址 %s' % dirpath)
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
+        print('当前抓取的url二级页面地址：%s 标题为：%s' % (url, title))
+    else:
+        print('当前无标题------')
+        exit()
     div = wuhuDIV(html)
 
     if re.findall(rex2, str(div)):
         imgUrlArr = getimg(div, rex2)
+        liNum = 0
         for img in imgUrlArr:
             m += 1
+            liNum += 1
             print('详情页地址为：%s,图片地址为：%s,第%d张图片下载' % (url, img, m))
 
             # 下载当前图片
-            savepic(m, img, session, head, path, dirpath, proxies)
+            savepic(m,liNum, img, session, head, path, dirpath, proxies, 1)
 
             time.sleep(2)
 
@@ -346,11 +390,159 @@ def test_ip(proxy):
         print(proxy,'请求异常')
 
 
+def download_images(start, end, isguolv, isyuanchuang, isproxy, guolv):
+    """
+    多线程下载图片
+
+    """
+    current_thread_name = threading.current_thread().name
+    print("当前线程名为---%s ---抓取第%s页 --  %s页的数据" % (current_thread_name, start, end))
+
+    session = requests.session()
+    c = requests.cookies.RequestsCookieJar()
+    c.set('227c9_lastvisit', c9_lastvisit)
+    session.cookies.update(c)
+
+    if isproxy:
+        proxies = getProxy()
+        print("当前代理地址为：%s" % proxies)
+    else:
+        proxies = {}
+
+    for i in range(start, end):
+        if i == 0:
+            index = "?fid=16"
+            # "http://t66y.com/thread0806.php?fid=16"
+        else:
+            index = '?fid=16&search=&page=%s' % (i+1)
+
+        # 拼接后的详细地址
+        url = baseurl+index
+
+        firstUrl = baseurl + index
+
+        page = '当前抓取第{}页的url地址为：{}'.format(i+1,url)
+        print(page)
+        # print('当前抓取第%s页的url地址：%s' %(i+1,url))
+
+        ##设置request头
+        head = {"referer": "http://t66y.com/index.php"}
+        ua = UserAgent()
+        head["User-Agent"] = ua.random
+
+        # 请求列表url地址
+        html = getURL(url, head, session, proxies)
+
+        main_logic(i, isguolv, isyuanchuang, proxies, session, guolv, head, html, firstUrl)
+
+def main_logic(i, isguolv, isyuanchuang, proxies, session, guolv, head,html, firstUrl):
+    current_thread_name = threading.current_thread().name
+
+    # 获取一级页面的所有li
+    allli = getLI(html)
+    ##图片张数定义
+    m = 0
+    ##tr 标签定义
+    y = 0
+    for item in allli:
+        y += 1
+        ##第一页前7条不抓（一般前面几条是发帖的公告和其他注意事项）
+        if isguolv == 1 and i == 0 and y <= guolv:
+            continue
+        print('当前第%d页---第%d条li' % (i+1, y))
+
+        ## 判断是否是[原创]
+        if isyuanchuang == 1:
+            if not re.findall(rex3, str(item)):
+                continue
+
+        if re.findall(rex1, str(item)):
+            # print(item)
+            url = base + re.findall(rex1, str(item))[0]
+            # print('详情页地址为： %s' % url)
+
+            title = re.findall(rex4, str(item))
+            if title:
+                title = re.findall(rex4, str(item))[0]
+                save_path = 'H:\\pa-pic\\caoliu\\'
+                time2 = time.strftime('%Y-%m-%d', time.localtime())
+                dirpath = save_path + time2
+                dirpath = dirpath + '\\' + title
+                path = dirpath + '\\caoliutv-%d(总)-%d(分)-%d(随机数).jpg'
+                print('当前第%d页---当前目录地址 %s' % (i+1, dirpath))
+                if not os.path.exists(dirpath):
+                    os.makedirs(dirpath)
+                print('当前第%d页---当前抓取的url二级页面地址：%s 标题为：%s' % (i+1, url, title))
+            else:
+                continue
+            # print(title)
+            # exit()
+
+            ##设置二级页面request头
+            # head = {}
+            head["referer"] = firstUrl
+            # head = getHead(head)
+
+            # 请求详情页的url地址
+            print("当前第%d页---开始访问详情页+++++++++++++++++++++++++" % (i+1))
+            html = getURL(url, head, session, proxies)
+            div = wuhuDIV(html)
+
+            if re.findall(rex2, str(div)):
+
+                imgUrlArr = getimg(div, rex2)
+                # print(imgUrlArr)
+                liNum = 0
+                for img in imgUrlArr:
+                    m += 1
+                    liNum += 1
+                    print('当前线程名为---%s---当前第%d页---下载中---标签地址为：%s,图片地址为：%s,总共%d张图片，当前地址第%d张' % (current_thread_name,i + 1, url, img, m, liNum))
+
+                    # 下载当前图片
+                    savepic(m, liNum, img, session, head, path, dirpath, proxies, i)
+
+                    time.sleep(2)
+
+def mainThread():
+    guolv = 9
+    print('开始爬虫草榴地址...')
+    isguolv = int(input("输入是否过滤(1或者0)： "))
+    if isguolv:
+        guolv = int(input("输入过滤的数目： "))
+
+    isyuanchuang = int(input("输入是否需要原创(1或者0)： "))
+    isproxy = int(input("输入是否需要代理(1或者0)： "))
+
+
+    num_threads = 6  # You can adjust this based on your preference
+    total_pages = 10  # You can adjust this based on your preference
+
+    # Calculate pages per thread
+    pages_per_thread = total_pages // num_threads
+
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        futures = []
+
+        for i in range(num_threads):
+            start_page = i * pages_per_thread
+            end_page = (i + 1) * pages_per_thread
+            if i == num_threads - 1:
+                end_page = total_pages
+            future = executor.submit(download_images, start_page, end_page, isguolv, isyuanchuang, isproxy, guolv)
+            futures.append(future)
+
+        # Wait for all threads to complete
+        concurrent.futures.wait(futures)
+
+        current_thread_name = threading.current_thread().name
+        print("主线程名为---%s" % current_thread_name)
+
 
 if __name__ == '__main__':
-    isList = int(input("请选择爬列表还是详情业(1-列表或者0-详情页)： "))
-    if isList:
+    isList = int(input("请选择爬列表还是详情业(1-列表或者0-详情页 3-多线程列表)： "))
+    if isList == 1:
         main()
-    else:
+    elif isList == 0:
         detail()
-
+    else:
+        mainThread()

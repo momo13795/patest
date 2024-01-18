@@ -1,1 +1,6 @@
 .idea
+/dist
+/build
+/webptojpg.spec
+/pa-pic/
+/caoliuGuiWindows.spec

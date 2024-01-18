@@ -311,7 +311,7 @@ def saveImgQuene(head, session, proxies, img_queue, path, dirpath):
         i = i+1
         print('下载图片线程名:{}, 图片地址：{}'.format(threading.currentThread().getName(), url))
         # 下载当前图片
-        base_caoliu.savepic(i, url, session, head, path, dirpath, proxies)
+        # base_caoliu.savepic(i, url, session, head, path, dirpath, proxies)
         time.sleep(random.randint(1, 2))
 
 
